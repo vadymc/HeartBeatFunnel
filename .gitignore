@@ -1,0 +1,16 @@
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+/out/
+
+*.class
+src/main/resources/config/application-local.yaml
+logs
+*.log
+application.pid
