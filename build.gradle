@@ -5,6 +5,7 @@ buildscript {
 	}
 	repositories {
 		mavenCentral()
+		jcenter()
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
@@ -19,10 +20,17 @@ apply plugin: 'kotlin-spring'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'net.researchgate.release'
+apply plugin: 'maven'
 
 group = 'vadc'
-version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.11
+
+ext {
+	bintrayUser = System.getenv("BINTRAY_USER")
+	bintrayKey = System.getenv("BINTRAY_KEY")
+}
+
 compileKotlin {
 	kotlinOptions {
 		freeCompilerArgs = ["-Xjsr305=strict"]
@@ -38,6 +46,7 @@ compileTestKotlin {
 
 repositories {
 	mavenCentral()
+	jcenter()
 }
 
 
@@ -48,4 +57,25 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	compileOnly('org.projectlombok:lombok')
 	testImplementation('org.springframework.boot:spring-boot-starter-test')
+}
+
+//release
+uploadArchives() {
+	repositories {
+		mavenDeployer {
+			repository(url: "https://api.bintray.com/content/vadc/heartbeat") {
+				authentication(userName: bintrayUser, password: bintrayKey)
+			}
+		}
+	}
+}
+
+afterReleaseBuild.dependsOn uploadArchives
+
+release {
+	failOnUnversionedFiles = false
+	tagTemplate = '$name-$version'
+	preTagCommitMessage = "[skip ci] pre tag: "
+	tagCommitMessage = "[skip ci] tag: "
+	newVersionCommitMessage = "[skip ci] new version: "
 }
