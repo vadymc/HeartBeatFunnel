@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${TRAVIS_PULL_REQUEST}" = "master" ]; then
+if [ "${TRAVIS_BRANCH}" = "master" ]; then
     echo "Building master"
     ./gradlew release -Prelease.useAutomaticVersion=true
 else
