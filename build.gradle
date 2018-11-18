@@ -15,6 +15,11 @@ buildscript {
 	}
 }
 
+plugins {
+	id "com.jfrog.bintray" version "1.7.3"
+	id "maven-publish"
+}
+
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
 apply plugin: 'eclipse'
@@ -25,11 +30,6 @@ apply plugin: 'maven'
 
 group = 'vadc'
 sourceCompatibility = 1.11
-
-ext {
-	bintrayUser = System.getenv("BINTRAY_USER")
-	bintrayKey = System.getenv("BINTRAY_KEY")
-}
 
 compileKotlin {
 	kotlinOptions {
@@ -60,22 +60,59 @@ dependencies {
 }
 
 //release
-uploadArchives() {
-	repositories {
-		mavenDeployer {
-			repository(url: "https://api.bintray.com/content/vadc/heartbeat") {
-				authentication(user: bintrayUser, key: bintrayKey)
+afterReleaseBuild.dependsOn bintrayUpload
+
+def pomConfig = {
+	licenses {
+		license {
+			name "The Apache Software License, Version 2.0"
+			url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+			distribution "repo"
+		}
+	}
+	developers {
+		developer {
+			id "vadc"
+			name "Vadym Chekrii"
+			email "vadym.chekrii@gmail.com"
+		}
+	}
+
+	scm {
+		url "https://github.com/vadymc/HeartBeatFunnel"
+	}
+}
+
+publishing {
+	publications {
+		mavenPublication(MavenPublication) {
+			from components.java
+			groupId 'vadc'
+			artifactId 'heartBeatFunnel'
+			version '$version'
+			pom.withXml {
+				def root = asNode()
+				root.appendNode('name', 'HeartBeat Funnel')
+				root.appendNode('url', 'https://github.com/vadymc/HeartBeatFunnel')
+				root.children().last() + pomConfig
 			}
 		}
 	}
 }
 
-afterReleaseBuild.dependsOn uploadArchives
-
-release {
-	failOnUnversionedFiles = false
-	tagTemplate = '$name-$version'
-	preTagCommitMessage = "[skip ci] pre tag: "
-	tagCommitMessage = "[skip ci] tag: "
-	newVersionCommitMessage = "[skip ci] new version: "
+bintray {
+	user = System.getenv('BINTRAY_USER')
+	key = System.getenv('BINTRAY_KEY')
+	pkg {
+		repo = 'heartbeat'
+		name = 'heartbeat-funnel'
+		userOrg = 'vadc'
+		vcsUrl = 'https://github.com/vadymc/HeartBeatFunnel.git'
+		licenses = ['Apache-2.0']
+		version {
+			name = '$version'
+			desc = '$version'
+			released  = new Date()
+		}
+	}
 }
