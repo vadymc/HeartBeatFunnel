@@ -16,7 +16,7 @@ buildscript {
 }
 
 plugins {
-	id "com.jfrog.bintray" version "1.7.3"
+	id "com.jfrog.bintray" version "1.8.4"
 	id "maven-publish"
 }
 
@@ -30,6 +30,11 @@ apply plugin: 'maven'
 
 group = 'vadc'
 sourceCompatibility = 1.11
+
+ext {
+	bintrayUser = "$System.env.BINTRAY_USER"
+	bintrayKey = "$System.env.BINTRAY_KEY"
+}
 
 compileKotlin {
 	kotlinOptions {
@@ -57,6 +62,14 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	compileOnly('org.projectlombok:lombok')
 	testImplementation('org.springframework.boot:spring-boot-starter-test')
+}
+
+bootRun  {
+	systemProperties = System.properties // support passing properties as -D arguments
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '4.10.2'
 }
 
 //release
@@ -101,11 +114,11 @@ publishing {
 }
 
 bintray {
-	user = System.getenv('BINTRAY_USER')
-	key = System.getenv('BINTRAY_KEY')
+	user = bintrayUser
+	key = bintrayKey
 	pkg {
 		repo = 'heartbeat'
-		name = 'heartbeat-funnel'
+		name = 'heartBeatFunnel'
 		userOrg = 'vadc'
 		vcsUrl = 'https://github.com/vadymc/HeartBeatFunnel.git'
 		licenses = ['Apache-2.0']
