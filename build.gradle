@@ -88,8 +88,8 @@ publishing {
 		mavenPublication(MavenPublication) {
 			from components.java
 			groupId 'vadc'
-			artifactId 'heartBeatFunnel'
-			version '$version'
+			artifactId 'HeartBeatFunnel'
+			version "$project.version"
 			pom.withXml {
 				def root = asNode()
 				root.appendNode('name', 'HeartBeat Funnel')
@@ -110,8 +110,8 @@ bintray {
 		vcsUrl = 'https://github.com/vadymc/HeartBeatFunnel.git'
 		licenses = ['Apache-2.0']
 		version {
-			name = '$version'
-			desc = '$version'
+			name = "$project.version"
+			desc = "$project.version"
 			released  = new Date()
 		}
 	}
