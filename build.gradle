@@ -98,7 +98,7 @@ def pomConfig = {
 
 publishing {
 	publications {
-		mavenPublication(MavenPublication) {
+		HeartBeatFunnel(MavenPublication) {
 			from components.java
 			groupId 'vadc'
 			artifactId 'HeartBeatFunnel'
@@ -116,6 +116,7 @@ publishing {
 bintray {
 	user = bintrayUser
 	key = bintrayKey
+	publications=['HeartBeatFunnel']
 	pkg {
 		repo = 'heartbeat'
 		name = 'heartBeatFunnel'
