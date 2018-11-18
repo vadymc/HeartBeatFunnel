@@ -64,7 +64,7 @@ uploadArchives() {
 	repositories {
 		mavenDeployer {
 			repository(url: "https://api.bintray.com/content/vadc/heartbeat") {
-				authentication(userName: bintrayUser, password: bintrayKey)
+				authentication(user: bintrayUser, key: bintrayKey)
 			}
 		}
 	}
