@@ -7,3 +7,5 @@ hbf:
   redis:
     host: nuc
     port: 6379
+  api:
+    key: ENC(8Ji+azWe/Ra/ocgYMszVayA0ub9O/vL/ncAfx4RQ79RMZzVWWgc1+ObtY+jQqpxD)

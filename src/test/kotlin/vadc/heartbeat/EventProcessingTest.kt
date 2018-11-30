@@ -1,15 +1,18 @@
 package vadc.heartbeat
 
+import config.ApiKeyFilter
 import io.restassured.RestAssured.given
-import io.restassured.filter.log.LogDetail
+import org.awaitility.Awaitility.await
+import org.awaitility.Duration.FIVE_SECONDS
+import org.awaitility.Duration.TEN_SECONDS
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
-import org.awaitility.Awaitility.*
-import org.awaitility.Duration.*
-import org.hamcrest.Matchers.`is`
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import vadc.heartbeat.domain.IncomingEvent
-import vadc.heartbeat.domain.IncomingEvent.State.*
+import vadc.heartbeat.domain.IncomingEvent.State.PROCESSED
 import vadc.heartbeat.repository.IncomingEventRepository
 import java.util.concurrent.Callable
 
@@ -18,6 +21,9 @@ class EventProcessingTest: AbstractIntTest() {
     @Autowired
     private lateinit var incomingEventRepository: IncomingEventRepository
 
+    @Value("\${hbf.api.key}")
+    private lateinit var apiKey: String
+
     @Test
     fun testEventProcessingLifecycle() {
         val body = """{"test":"value"}"""
@@ -25,11 +31,12 @@ class EventProcessingTest: AbstractIntTest() {
         // submit new event
         val incomingEvent = given(requestSpecification)
                 .given()
+                    .header(ApiKeyFilter.apiKey, apiKey)
                     .body(body)
                 .`when`()
                     .post("/v1/events/")
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK.value())
                     .body("payload", equalTo(body))
                 .log().all()
                 .extract().body().`as`(IncomingEvent::class.java)
@@ -38,9 +45,10 @@ class EventProcessingTest: AbstractIntTest() {
         // get by id submitted event
         given(requestSpecification)
                 .`when`()
+                    .header(ApiKeyFilter.apiKey, apiKey)
                     .get("/v1/events/{id}/", eventId)
                 .then()
-                    .statusCode(200)
+                    .statusCode(HttpStatus.OK.value())
                     .body("payload", equalTo(body))
                 .log().all()
 
@@ -53,6 +61,17 @@ class EventProcessingTest: AbstractIntTest() {
         await()
                 .atMost(TEN_SECONDS)
                 .until(doesExist(eventId), `is`(false))
+    }
+
+    @Test
+    fun testRequestWithoutApiKeyFails() {
+        given(requestSpecification)
+                .given()
+                    .body("testbody")
+                .`when`()
+                    .post("/v1/events")
+                .then()
+                    .statusCode(HttpStatus.UNAUTHORIZED.value())
     }
 
     private fun eventProcessingState(id: String): Callable<IncomingEvent.State> {

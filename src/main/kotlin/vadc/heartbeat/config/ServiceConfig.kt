@@ -1,6 +1,8 @@
 package vadc.heartbeat.config
 
+import config.ApiKeyFilter
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.MessageListener
@@ -21,6 +23,9 @@ class ServiceConfig {
 
     @Value("\${hbf.redis.port}")
     private var redisPort: Int = -1
+
+    @Value("\${hbf.api.key}")
+    private lateinit var apiKey: String
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
@@ -45,6 +50,14 @@ class ServiceConfig {
             setConnectionFactory(redisConnectionFactory)
             addMessageListener(expiredMessageListener, PatternTopic(expiredEventTopic))
             addMessageListener(eventOutProcessor, ChannelTopic(incomingEventTopic))
+        }
+    }
+
+    @Bean
+    fun filterRegistrationBean(): FilterRegistrationBean<ApiKeyFilter> {
+        return FilterRegistrationBean<ApiKeyFilter>().apply {
+            filter = ApiKeyFilter(apiKey)
+            addUrlPatterns("/v1/*")
         }
     }
 
