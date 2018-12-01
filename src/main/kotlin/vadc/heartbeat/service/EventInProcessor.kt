@@ -16,6 +16,8 @@ class EventInProcessor {
 
     private val log = LoggerFactory.getLogger(EventInProcessor::class.java)
 
+    private val emptyString = ""
+
     @Autowired
     lateinit var redisTemplate: RedisTemplate<String, String>
 
@@ -35,7 +37,8 @@ class EventInProcessor {
     }
 
     fun submitForProcessing(event: String) {
-        redisTemplate.convertAndSend(ServiceConfig.incomingEventTopic, event)
+        redisTemplate.opsForList().leftPush(ServiceConfig.incomingEventList, event)
+        redisTemplate.convertAndSend(ServiceConfig.incomingEventTopic, emptyString)
     }
 
 }
