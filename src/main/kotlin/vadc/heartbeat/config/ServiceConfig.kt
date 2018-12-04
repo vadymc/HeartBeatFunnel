@@ -62,7 +62,8 @@ class ServiceConfig {
     }
 
     companion object {
-        var incomingEventTopic = "incoming_event"
-        var expiredEventTopic = "__keyevent@*__:expired"
+        val incomingEventList = "incoming_event_list"
+        val incomingEventTopic = "incoming_event_topic"
+        val expiredEventTopic = "__keyevent@*__:expired"
     }
 }
