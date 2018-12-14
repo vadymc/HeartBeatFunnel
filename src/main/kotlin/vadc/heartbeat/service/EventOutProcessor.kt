@@ -26,7 +26,16 @@ class EventOutProcessor: MessageListener {
     lateinit var jmsTemplate: JmsTemplate
 
     override fun onMessage(message: Message, pattern: ByteArray?) {
-        val incomingEvent = redisTemplate.opsForList().rightPop(ServiceConfig.incomingEventList) ?: return
+        var incomingEvent = fetchEvent()
+        while (incomingEvent != null) {
+            process(incomingEvent)
+            incomingEvent = fetchEvent()
+        }
+    }
+
+    private fun fetchEvent() = redisTemplate.opsForList().rightPop(ServiceConfig.incomingEventList)
+
+    private fun process(incomingEvent: String) {
         log.info("Received incoming event for processing $incomingEvent")
         val event = incomingEventRepository.findById(incomingEvent)
         if (event.isPresent) {

@@ -71,7 +71,7 @@ class EventProcessingTest: AbstractIntTest() {
                 .until(doesExist(eventId), `is`(false))
 
         // verify message was sent out
-        verify(jmsTemplate, times(1))
+        verify(jmsTemplate, atLeastOnce())
                 .convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, body)
     }
 
