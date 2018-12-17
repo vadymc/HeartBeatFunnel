@@ -1,2 +1,4 @@
 hbf:
   api.key: testapikey
+  auth.value: testauth
+  redis.host: localhost

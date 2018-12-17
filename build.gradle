@@ -56,23 +56,28 @@ repositories {
 }
 
 dependencies {
-	implementation('org.springframework.boot:spring-boot-starter-web')
-	implementation('org.springframework.data:spring-data-redis')
-	implementation('org.springframework.boot:spring-boot-starter-actuator')
-	implementation('org.springframework:spring-jms')
-	implementation('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.0')
-	implementation('redis.clients:jedis:2.9.0')
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
-	implementation('com.amazonaws:aws-java-sdk:1.11.461')
-	implementation('com.amazonaws:amazon-sqs-java-messaging-lib:1.0.4')
-	testImplementation('org.springframework.boot:spring-boot-starter-test')
-	testImplementation('org.testcontainers:testcontainers:1.10.1')
-	testImplementation('io.rest-assured:rest-assured:3.2.0')
-	testImplementation('io.rest-assured:json-schema-validator:3.2.0')
-	testImplementation('org.awaitility:awaitility:3.1.3')
-    testImplementation('org.mockito:mockito-core:2.23.4')
+	implementation (
+		'org.springframework.boot:spring-boot-starter-web',
+		'org.springframework.data:spring-data-redis',
+		'org.springframework.boot:spring-boot-starter-actuator',
+		'org.springframework:spring-jms',
+		'com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.0',
+		'redis.clients:jedis:2.9.0',
+		'org.jetbrains.kotlin:kotlin-stdlib-jdk8',
+		'org.jetbrains.kotlin:kotlin-reflect',
+		'com.fasterxml.jackson.module:jackson-module-kotlin',
+		'com.amazonaws:aws-java-sdk:1.11.461',
+		'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.4',
+		'org.json:json:20180813'
+	)
+	testImplementation (
+		'org.springframework.boot:spring-boot-starter-test',
+		'org.testcontainers:testcontainers:1.10.1',
+		'io.rest-assured:rest-assured:3.2.0',
+		'io.rest-assured:json-schema-validator:3.2.0',
+		'org.awaitility:awaitility:3.1.3',
+		'org.mockito:mockito-core:2.23.4'
+	)
 }
 
 wrapper {

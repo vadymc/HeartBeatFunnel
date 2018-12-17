@@ -1,6 +1,6 @@
 package vadc.heartbeat.config
 
-import config.ApiKeyFilter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
@@ -13,7 +13,9 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.PatternTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
+import vadc.heartbeat.controller.filter.ApiKeyFilter
 import vadc.heartbeat.service.EventOutProcessor
+import vadc.heartbeat.util.EnvironmentContainer
 
 @Configuration
 class ServiceConfig {
@@ -27,8 +29,17 @@ class ServiceConfig {
     @Value("\${hbf.api.key}")
     private lateinit var apiKey: String
 
+    @Value("\${hbf.auth.value}")
+    private lateinit var authValue: String
+
+    @Autowired(required = false)
+    private var environmentContainer: EnvironmentContainer? = null
+
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
+        if (environmentContainer != null) {
+            return JedisConnectionFactory(RedisStandaloneConfiguration(environmentContainer!!.redisHost(), environmentContainer!!.redisPort()))
+        }
         return JedisConnectionFactory(RedisStandaloneConfiguration(redisHost, redisPort))
     }
 
@@ -56,7 +67,7 @@ class ServiceConfig {
     @Bean
     fun filterRegistrationBean(): FilterRegistrationBean<ApiKeyFilter> {
         return FilterRegistrationBean<ApiKeyFilter>().apply {
-            filter = ApiKeyFilter(apiKey)
+            filter = ApiKeyFilter(apiKey, authValue)
             addUrlPatterns("/v1/*")
         }
     }

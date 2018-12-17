@@ -1,6 +1,5 @@
 package vadc.heartbeat
 
-import config.ApiKeyFilter
 import io.restassured.RestAssured.given
 import org.awaitility.Awaitility.await
 import org.awaitility.Duration
@@ -8,13 +7,16 @@ import org.awaitility.Duration.FIVE_SECONDS
 import org.awaitility.Duration.TEN_SECONDS
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.equalTo
+import org.junit.After
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.jms.core.JmsTemplate
 import vadc.heartbeat.config.MessagingConfig
+import vadc.heartbeat.controller.filter.ApiKeyFilter
 import vadc.heartbeat.domain.IncomingEvent
 import vadc.heartbeat.domain.IncomingEvent.State.PROCESSED
 import vadc.heartbeat.repository.IncomingEventRepository
@@ -32,9 +34,14 @@ class EventProcessingTest: AbstractIntTest() {
     @Value("\${hbf.api.key}")
     private lateinit var apiKey: String
 
+    @After
+    fun after() {
+        Mockito.reset(jmsTemplate)
+    }
+
     @Test
     fun testEventProcessingLifecycle() {
-        val body = """{"test":"value"}"""
+        val body = load("sonarr_payload_one_episode.json")
 
         // submit new event
         val incomingEvent = given(requestSpecification)
@@ -72,7 +79,7 @@ class EventProcessingTest: AbstractIntTest() {
 
         // verify message was sent out
         verify(jmsTemplate, atLeastOnce())
-                .convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, body)
+                .convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, "[Download]Gravity Falls S2E14")
     }
 
     @Test
@@ -88,7 +95,7 @@ class EventProcessingTest: AbstractIntTest() {
 
     @Test
     fun testEventReprocessing() {
-        val body = """{"test":"value2"}"""
+        val body = """{"test":"value"}"""
 
         // fail first try of event processing
         `when`(jmsTemplate.convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, body))

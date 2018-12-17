@@ -25,6 +25,9 @@ class EventOutProcessor: MessageListener {
     @Autowired
     lateinit var jmsTemplate: JmsTemplate
 
+    @Autowired
+    lateinit var payloadTransformationService: PayloadTransformationService
+
     override fun onMessage(message: Message, pattern: ByteArray?) {
         var incomingEvent = fetchEvent()
         while (incomingEvent != null) {
@@ -39,10 +42,11 @@ class EventOutProcessor: MessageListener {
         log.info("Received incoming event for processing $incomingEvent")
         val event = incomingEventRepository.findById(incomingEvent)
         if (event.isPresent) {
-            jmsTemplate.convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, event.get().payload)
+            val transformedPayload = payloadTransformationService.transform(event.get().payload)
+            jmsTemplate.convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, transformedPayload)
             event.get().state = IncomingEvent.State.PROCESSED
             incomingEventRepository.save(event.get())
-            log.info("Processed ${event.get()}")
+            log.info("Processed ${event.get()}, transformed payload $transformedPayload")
         }
     }
 

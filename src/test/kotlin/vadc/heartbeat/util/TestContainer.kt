@@ -5,16 +5,23 @@ import org.springframework.stereotype.Component
 import org.testcontainers.containers.GenericContainer
 
 @Component
-@Profile("!test")
-class TestContainer {
+@Profile("!travis")
+class TestContainer: EnvironmentContainer {
 
-    companion object {
-        init {
-            val redis: GenericContainer<*> = GenericContainer<Nothing>("redis:5.0.1")
-                    .withExposedPorts(6379)
-            redis.start()
-            System.setProperty("hbf.redis.host", redis.getContainerIpAddress())
-            System.setProperty("hbf.redis.port", redis.getFirstMappedPort().toString())
-        }
+    private var redis: GenericContainer<*> = init()
+
+    override fun redisHost(): String {
+        return redis.getContainerIpAddress()
+    }
+
+    override fun redisPort(): Int {
+        return redis.getFirstMappedPort()
+    }
+
+    private fun init(): GenericContainer<*> {
+        val redis: GenericContainer<*> = GenericContainer<Nothing>("redis:5.0.1")
+                .withExposedPorts(6379)
+        redis.start()
+        return redis
     }
 }

@@ -9,3 +9,5 @@ hbf:
     port: 6379
   api:
     key: ENC(8Ji+azWe/Ra/ocgYMszVayA0ub9O/vL/ncAfx4RQ79RMZzVWWgc1+ObtY+jQqpxD)
+  auth:
+    value: ENC(4/MDD64hvxIt82A7TrmCHSskezME4kQF3WKgbDSdoA8=)

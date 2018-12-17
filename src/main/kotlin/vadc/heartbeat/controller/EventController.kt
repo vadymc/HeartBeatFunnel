@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*
 import vadc.heartbeat.domain.IncomingEvent
 import vadc.heartbeat.repository.IncomingEventRepository
 import vadc.heartbeat.service.EventInProcessor
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/v1/events")
@@ -17,7 +18,7 @@ class EventController {
     lateinit var incomingEventRepository: IncomingEventRepository
 
     @PostMapping("/")
-    fun submitEvent(@RequestBody event: String): IncomingEvent {
+    fun submitEvent(@RequestBody event: String, request: HttpServletRequest): IncomingEvent {
         return eventInProcessor.submit(event)
     }
 
