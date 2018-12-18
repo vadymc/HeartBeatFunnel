@@ -18,7 +18,7 @@ docker build -t vadymchekrii/heartbeat:latest .
 docker push vadymchekrii/heartbeat:latest
 ```
 
-## Running docker image
+## Runtime
 The following environment variables have to be passed:
 ```
 AWS_REGION
