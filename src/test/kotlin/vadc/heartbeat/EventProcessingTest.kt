@@ -1,14 +1,16 @@
 package vadc.heartbeat
 
+import io.grpc.ManagedChannelBuilder
 import io.restassured.RestAssured.given
 import org.awaitility.Awaitility.await
 import org.awaitility.Duration
 import org.awaitility.Duration.FIVE_SECONDS
 import org.awaitility.Duration.TEN_SECONDS
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.*
 import org.junit.After
+import org.junit.Assert.assertThat
 import org.junit.Test
+import org.lognet.springboot.grpc.context.LocalRunningGrpcPort
 import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +22,8 @@ import vadc.heartbeat.controller.filter.ApiKeyFilter
 import vadc.heartbeat.domain.IncomingEvent
 import vadc.heartbeat.domain.IncomingEvent.State.PROCESSED
 import vadc.heartbeat.repository.IncomingEventRepository
+import vadc.heartbeat.service.EventRequest
+import vadc.heartbeat.service.EventServiceGrpc
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
@@ -33,6 +37,9 @@ class EventProcessingTest: AbstractIntTest() {
 
     @Value("\${hbf.api.key}")
     private lateinit var apiKey: String
+
+    @LocalRunningGrpcPort
+    private var grpcPort: Int = -1
 
     @After
     fun after() {
@@ -80,6 +87,24 @@ class EventProcessingTest: AbstractIntTest() {
         // verify message was sent out
         verify(jmsTemplate, atLeastOnce())
                 .convertAndSend(MessagingConfig.NOTIFICATION_QUEUE, "[Download]Gravity Falls S2E14")
+    }
+
+    @Test
+    fun testSubmitEventThroughGrpc() {
+        val channel = ManagedChannelBuilder.forAddress("localhost", grpcPort)
+                .usePlaintext()
+                .build()
+
+        val stub = EventServiceGrpc.newBlockingStub(channel)
+
+        val body = load("sonarr_payload_one_episode.json")
+        val event = EventRequest.newBuilder().setBody(body).build()
+        val response = stub.submit(event)
+        channel.shutdown()
+
+        assertThat(response.id, notNullValue())
+        assertThat(response.state, notNullValue())
+        assertThat(response.payload, `is`(body))
     }
 
     @Test
