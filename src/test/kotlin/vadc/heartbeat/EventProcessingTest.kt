@@ -1,6 +1,10 @@
 package vadc.heartbeat
 
+import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.Metadata
+import io.grpc.StatusRuntimeException
+import io.grpc.stub.MetadataUtils
 import io.restassured.RestAssured.given
 import org.awaitility.Awaitility.await
 import org.awaitility.Duration
@@ -9,7 +13,9 @@ import org.awaitility.Duration.TEN_SECONDS
 import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Assert.assertThat
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExpectedException
 import org.lognet.springboot.grpc.context.LocalRunningGrpcPort
 import org.mockito.Mockito
 import org.mockito.Mockito.*
@@ -24,10 +30,15 @@ import vadc.heartbeat.domain.IncomingEvent.State.PROCESSED
 import vadc.heartbeat.repository.IncomingEventRepository
 import vadc.heartbeat.service.EventRequest
 import vadc.heartbeat.service.EventServiceGrpc
+import vadc.heartbeat.util.GrpcClientUtil
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 class EventProcessingTest: AbstractIntTest() {
+
+    @Rule
+    @JvmField
+    final val expectedException = ExpectedException.none()
 
     @Autowired
     private lateinit var incomingEventRepository: IncomingEventRepository
@@ -95,16 +106,32 @@ class EventProcessingTest: AbstractIntTest() {
                 .usePlaintext()
                 .build()
 
-        val stub = EventServiceGrpc.newBlockingStub(channel)
-
         val body = load("sonarr_payload_one_episode.json")
         val event = EventRequest.newBuilder().setBody(body).build()
-        val response = stub.submit(event)
+        val response = grpcStubWithApiKey(channel).submit(event)
         channel.shutdown()
 
         assertThat(response.id, notNullValue())
         assertThat(response.state, notNullValue())
         assertThat(response.payload, `is`(body))
+    }
+
+    @Test
+    fun testSubmitEventThroughGrpcWithoutApiKeyFails() {
+        expectedException.expect(StatusRuntimeException::class.java)
+        expectedException.expectMessage("UNAUTHENTICATED: x-api-key header is incorrect")
+
+        val channel = ManagedChannelBuilder.forAddress("localhost", grpcPort)
+                                        .usePlaintext()
+                                        .build()
+        val body = load("sonarr_payload_one_episode.json")
+        val event = EventRequest.newBuilder().setBody(body).build()
+
+        try {
+            grpcStubWithoutApiKey(channel).submit(event)
+        } finally {
+            channel.shutdown()
+        }
     }
 
     @Test
@@ -161,5 +188,16 @@ class EventProcessingTest: AbstractIntTest() {
 
     private fun doesExist(id: String): Callable<Boolean> {
         return Callable { incomingEventRepository.existsById(id) }
+    }
+
+    private fun grpcStubWithApiKey(channel: ManagedChannel): EventServiceGrpc.EventServiceBlockingStub {
+        val stub = EventServiceGrpc.newBlockingStub(channel)
+        val header = Metadata()
+        header.put(GrpcClientUtil.headerKey, apiKey)
+        return MetadataUtils.attachHeaders(stub, header)
+    }
+
+    private fun grpcStubWithoutApiKey(channel: ManagedChannel): EventServiceGrpc.EventServiceBlockingStub {
+        return EventServiceGrpc.newBlockingStub(channel)
     }
 }
