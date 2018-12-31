@@ -12,6 +12,7 @@ buildscript {
 		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
 		classpath("net.researchgate:gradle-release:2.7.0")
+		classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
 	}
 }
 
@@ -19,6 +20,7 @@ plugins {
 	id "com.jfrog.bintray" version "1.8.4"
 	id "maven-publish"
 	id 'com.gradle.build-scan' version '1.16'
+	id "com.google.protobuf" version "0.8.7"
 }
 
 apply plugin: 'kotlin'
@@ -68,7 +70,8 @@ dependencies {
 		'com.fasterxml.jackson.module:jackson-module-kotlin',
 		'com.amazonaws:aws-java-sdk:1.11.461',
 		'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.4',
-		'org.json:json:20180813'
+		'org.json:json:20180813', 
+		'io.github.lognet:grpc-spring-boot-starter:3.0.0'
 	)
 	testImplementation (
 		'org.springframework.boot:spring-boot-starter-test',
@@ -152,3 +155,46 @@ buildScan {
 	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
 	termsOfServiceAgree = 'yes'
 }
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.6.1'
+	}
+	plugins {
+		grpc {
+			artifact = "io.grpc:protoc-gen-grpc-java:1.17.1"
+		}
+	}
+
+	generateProtoTasks {
+		ofSourceSet('main').each { task ->
+			task.builtins {
+				java{
+					outputSubDir = 'protoGen'
+				}
+			}
+			task.plugins {
+				grpc {
+					outputSubDir = 'protoGen'
+				}
+			}
+		}
+	}
+	generatedFilesBaseDir = "$projectDir/src/"
+}
+
+task cleanProtoGen{
+	doFirst{
+		delete("$projectDir/src/main/protoGen")
+	}
+}
+clean.dependsOn cleanProtoGen
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src/main/protoGen'
+		}
+	}
+}
+
